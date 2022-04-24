@@ -1,0 +1,108 @@
+/*Zadání - Program pro převod zprávy do Morseovy abecedy. Výstup bude jak ve tvaru textovém tak zvukovém.
+ Podmínky - program může být napsán v jakémkoli programovacím prostředí (Matlab, Mathematica, Pascal, Basic, C++, PHP, Java, ....) 
+          - program musí splňovat všechny požadavky dle zadání
+          - k funkčnímu programu bude přiložen dokument, který bude obsahovat popis programu, popis funkcí programu a zdrojový text programu*/
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading;
+using System.Globalization;
+
+namespace Morse_Code_With_Audio
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            static string RemoveDiacritics(string text) //Část kódu, která nám pomůže normalizovat diakritiku - odstranění háčků a čárek.
+            {
+                var normalizedString = text.Normalize(NormalizationForm.FormD);
+                var stringBuilder = new StringBuilder();
+                foreach (var c in normalizedString)
+                {
+                    var unicodeCategory = CharUnicodeInfo.GetUnicodeCategory(c);
+                    if (unicodeCategory != UnicodeCategory.NonSpacingMark)
+                    {
+                        stringBuilder.Append(c);
+                    }
+                }
+
+                return stringBuilder.ToString().Normalize(NormalizationForm.FormC);
+            }
+            char[] text = { ' ', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r',
+                's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '?', '.', '-', ',',
+                ':', '!', '"', '(', ')', '/', '=', '+' }; //Pole pro příjmané znaky
+            string[] morseCode = { " / |", " . - |", " - . . . |", " - . - . |", " - . . |", " . |", " . . - . |" 
+                    , " - - . |", " . . . . |", " . . |", " . - - - |", " - . - |", " . - . . |", " - - |",
+                " - . |", " - - - |", " . - - . |", " - - . - |", " . - . |", " . . . |", " - |", " . . - |",
+                " . . . - |", " . - - |", " - . . - |", " - . - - |", " - - . . |", " . - - - - |",
+                " . . - - - |", " . . . - - |", " . . . . - |", " . . . . . |", " - . . . . |", " - - . . . |",
+                " - - - . . |", " - - - - . |", " - - - - - |"," . . - - . . |"," . - . - . - |" ," - . . . . - |",
+                " - - . . - - |" ," - - - . . . |" ," - . - . - - |" ," . - . . - . |" ," - . - - . |" ," - . - - . - |" ,
+                " - . . - . |" ," - . . . - |" ," . - . - .|"  }; //Pole pro záznam morseovy abecedy.
+            preklad: //Na tomhle řádku nám začíná překlad. V případě špatného vstupu se program vrací do téhle části a začíná znovu.
+            string toTranslate = ""; //Vytvoření string proměnné, která nám uloží vstupní text k překladu. 
+            string translatedMorse = ""; //Vytvoření string proměnné, ve které se bude ukládat morseova abeceda.
+            Console.WriteLine("Zadejte text k prekladu:");
+            toTranslate = Console.ReadLine(); //Uložení vstupu
+            toTranslate = RemoveDiacritics(toTranslate.ToLower()); //Ze zadaného textu se nám smaže diakritika a celý text se převede na malé znaky.
+            if (string.IsNullOrWhiteSpace(toTranslate)) //Kontrola, zda byl zadán text k překladu
+            {
+                Console.Error.Write("K prekladu nebylo nic zadano. Prosim, zmacknete libovoulnou klavesu pro navraceni.");
+                Console.ReadKey();
+                Console.Clear();
+                goto preklad;
+            }
+            for (int i = 0; i < toTranslate.Length; i++)
+            {
+                for(int j = 0; j < 49; j++)
+                {
+                    if (toTranslate[i] == text[j]) //Hledání morseových znaků a následné přiřazování
+                    {
+                        translatedMorse += morseCode[j];
+                        break;
+                    }
+                    for (int k = 0; k < text.Length; k++)
+                    {
+                        if (text.Contains(toTranslate[i])) continue; //Kontrola, zda zadané znaky jsou v rámci char[] text pole.
+                        else
+                        {
+                            Console.WriteLine("Zadan neplatny znak. Zmacknete prosim libovolnout klavesu pro navraceni."); //V případě, že nejsou, nám to zahlásí chybu.
+                            Console.ReadKey();
+                            Console.WriteLine("");
+                            Console.Clear();
+                            goto preklad; //Vrátí nás nahoru. 
+                        }
+                    }
+                }
+            }
+            Console.WriteLine($"Preklad: {translatedMorse}");//Výpis našeho textu v morseové abecedě
+            int freq = 500;//Nastavení frekvence pro zvukový výstup
+            int dur = 250;//Nastavení délky zvukového výstupu
+            for (int z = 0; z < translatedMorse.Length; z++)
+            {
+                if (translatedMorse[z] == '.')//Vyhledání teček
+                {
+                    Console.Beep(freq, dur);//Implementace pípnutí
+                    Thread.Sleep(50);//Nastavení pauzy mezi jednotlivými pípinutími 
+
+                }
+                else if (translatedMorse[z] == '-') //Vyhledání čárek
+                {
+                    Console.Beep(freq, dur * 2); //Implementace pípnutí, v případě čárek dvakrát tak dlouhé
+                    Thread.Sleep(50); //Nastavení pauzy mezi jednotlivými pípinutími
+                }
+                else
+                {
+                    Thread.Sleep(150); //V případě mezer nastavení delší pauzy
+                }
+            }
+
+            
+        }
+    }
+}
